@@ -49,7 +49,7 @@ class TestElementwise:
         setup = lambda: ([generate_arrays(pkg, 1)[0] / (NSIZE * NSIZE)], {})
 
         def func(arr):
-            return pkg.exp(pkg.cos(pkg.arcsinh(arr))) +\
+            return pkg.exp(pkg.cos(pkg.asinh(arr))) +\
                 pkg.cbrt(pkg.log(arr) * pkg.expm1(-pkg.sqrt(arr)))
 
         result = benchmark.pedantic(
@@ -64,7 +64,7 @@ class TestElementwise:
         setup = lambda: ([generate_arrays(pkg, 1)[0] / (NSIZE * NSIZE)], {})
 
         result = benchmark.pedantic(
-            target=pkg.arccos,
+            target=pkg.acos,
             setup=setup,
             rounds=ROUNDS,
             iterations=ITERATIONS
@@ -74,7 +74,7 @@ class TestElementwise:
         setup = lambda: (generate_arrays(pkg, 1), {})
 
         result = benchmark.pedantic(
-            target=pkg.arccosh,
+            target=pkg.acosh,
             setup=setup,
             rounds=ROUNDS,
             iterations=ITERATIONS
@@ -84,7 +84,7 @@ class TestElementwise:
         setup = lambda: ([generate_arrays(pkg, 1)[0] / (NSIZE * NSIZE)], {})
 
         result = benchmark.pedantic(
-            target=pkg.arcsin,
+            target=pkg.asin,
             setup=setup,
             rounds=ROUNDS,
             iterations=ITERATIONS
@@ -94,7 +94,7 @@ class TestElementwise:
         setup = lambda: (generate_arrays(pkg, 1), {})
 
         result = benchmark.pedantic(
-            target=pkg.arcsinh,
+            target=pkg.asinh,
             setup=setup,
             rounds=ROUNDS,
             iterations=ITERATIONS
@@ -104,7 +104,7 @@ class TestElementwise:
         setup = lambda: (generate_arrays(pkg, 1), {})
 
         result = benchmark.pedantic(
-            target=pkg.arctan,
+            target=pkg.atan,
             setup=setup,
             rounds=ROUNDS,
             iterations=ITERATIONS
@@ -114,7 +114,7 @@ class TestElementwise:
         setup = lambda: ([(generate_arrays(pkg, 1)[0] - 1) / (NSIZE * NSIZE)], {})
 
         result = benchmark.pedantic(
-            target=pkg.arctanh,
+            target=pkg.atanh,
             setup=setup,
             rounds=ROUNDS,
             iterations=ITERATIONS
@@ -296,17 +296,17 @@ def generate_arrays(pkg, count):
     pkg = pkg.__name__
     if "cupy" == pkg:
         for i in range(count):
-            arr_list.append(cupy.arange(1, NSIZE * NSIZE + 1, dtype=DTYPE).reshape((NSIZE, NSIZE)))
+            arr_list.append(cupy.arange((NSIZE, NSIZE), dtype=DTYPE))
         cupy.cuda.runtime.deviceSynchronize()
     elif "arrayfire" == pkg:
         af.device_gc()
         for i in range(count):  
-            arr_list.append(af.arange(1, NSIZE * NSIZE + 1, dtype=DTYPE).reshape((NSIZE, NSIZE)))
+            arr_list.append(af.randu((NSIZE, NSIZE), dtype=getattr(af, DTYPE)))
     elif "dpnp" == pkg:
         for i in range(count):
-            arr_list.append(dpnp.arange(1, NSIZE * NSIZE + 1, dtype=DTYPE).reshape((NSIZE, NSIZE)))
+            arr_list.append(dpnp.random.rand((NSIZE, NSIZE)).astype(DTYPE))
     elif "numpy" == pkg:
         for i in range(count):
-            arr_list.append(np.arange(1, NSIZE * NSIZE + 1, dtype=DTYPE).reshape((NSIZE, NSIZE)))
+            arr_list.append(np.random.rand((NSIZE, NSIZE)).astype(DTYPE))
 
     return arr_list

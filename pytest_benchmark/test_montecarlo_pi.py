@@ -63,7 +63,9 @@ def calc_pi_cupy(samples):
     cupy.random.seed(1)
     x = cupy.random.rand(samples, dtype=np.float32)
     y = cupy.random.rand(samples, dtype=np.float32)
-    return 4. * cupy.sum(in_circle(x, y)) / samples
+    res = 4. * cupy.sum(in_circle(x, y)) / samples
+    cupy.cuda.runtime.deviceSynchronize()
+    return res
 
 def calc_pi_dpnp(samples):
     dpnp.random.seed(1)

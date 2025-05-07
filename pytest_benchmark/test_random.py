@@ -42,62 +42,63 @@ IDS = [pkg.__name__ for pkg in PKGS]
 @pytest.mark.parametrize(
     "pkg", PKGS, ids=IDS
 )
+
+def setup():
+        np.random.seed(1)
+        dpnp.random.seed(1)
+        cupy.random.seed(1)
+        af.set_seed(1)
+
+def randn_np():
+    arr = np.random.normal(size=(NNUMBERS))
+
+def randn_dpnp():
+    arr = dpnp.random.normal(size=(NNUMBERS))
+
+def randn_cupy():
+    arr = cupy.random.normal(size=(NNUMBERS))
+    cupy.cuda.runtime.deviceSynchronize()
+
+def randn_af():
+    arr = af.randn((NNUMBERS))
+    af.eval(arr)
+    af.sync()
+
+def randu_np():
+    arr = np.random.uniform(size=(NNUMBERS))
+
+def randu_dpnp():
+    arr = dpnp.random.uniform(size=(NNUMBERS))
+
+def randu_cupy():
+    arr = cupy.random.uniform(size=(NNUMBERS))
+    cupy.cuda.runtime.deviceSynchronize()
+
+def randu_af():
+    arr = af.randu((NNUMBERS))
+    af.eval(arr)
+    af.sync()
+
 class TestRandom:
-    def test_beta(self, benchmark, pkg):
-        result = benchmark.pedantic(
-            target=pkg.random.beta,
-            args=(
-                4.0,
-                5.0,
-                NNUMBERS,
-            ),
-            rounds=ROUNDS,
-            iterations=ITERATIONS,
-        )
-
-    def test_exponential(self, benchmark, pkg):
-        result = benchmark.pedantic(
-            target=pkg.random.exponential,
-            args=(
-                4.0,
-                NNUMBERS,
-            ),
-            rounds=ROUNDS,
-            iterations=ITERATIONS,
-        )
-
-    def test_gamma(self, benchmark, pkg):
-        result = benchmark.pedantic(
-            target=pkg.random.gamma,
-            args=(
-                2.0,
-                4.0,
-                NNUMBERS,
-            ),
-            rounds=ROUNDS,
-            iterations=ITERATIONS,
-        )
-
     def test_normal(self, benchmark, pkg):
+        FUNCS = { "dpnp" : randn_dpnp , "numpy" : randn_np, \
+         "cupy" : randn_cupy , "arrayfire" : randn_af }
+        
         result = benchmark.pedantic(
-            target=pkg.random.normal,
-            args=(
-                0.0,
-                1.0,
-                NNUMBERS,
-            ),
+            target=FUNCS[pkg.__name__],
+            setup=setup,
             rounds=ROUNDS,
-            iterations=ITERATIONS,
+            iterations=ITERATIONS
         )
 
+    
     def test_uniform(self, benchmark, pkg):
+        FUNCS = { "dpnp" : randu_dpnp , "numpy" : randu_np, \
+         "cupy" : randu_cupy , "arrayfire" : randu_af }
+        
         result = benchmark.pedantic(
-            target=pkg.random.uniform,
-            args=(
-                0.0,
-                1.0,
-                NNUMBERS,
-            ),
+            target=FUNCS[pkg.__name__],
+            setup=setup,
             rounds=ROUNDS,
-            iterations=ITERATIONS,
+            iterations=ITERATIONS
         )

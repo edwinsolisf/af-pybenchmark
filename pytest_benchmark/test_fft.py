@@ -46,19 +46,23 @@ def generate_arrays(pkg, count):
     pkg = pkg.__name__
     
     if "cupy" == pkg:
+        cupy.random.seed(1)
         for i in range(count):
-            arr_list.append(cupy.arange(1, NSIZE * NSIZE + 1, dtype=DTYPE).reshape((NSIZE, NSIZE)))
+            arr_list.append(cupy.random.rand((NSIZE, NSIZE), dtype=DTYPE))
         cupy.cuda.runtime.deviceSynchronize()
     elif "arrayfire" == pkg:
+        af.set_seed(1)
         af.device_gc()
         for i in range(count):  
-            arr_list.append(af.arange(1, NSIZE * NSIZE + 1, dtype=DTYPE).reshape((NSIZE, NSIZE)))
+            arr_list.append(af.randu((NSIZE, NSIZE), dtype=getattr(af, DTYPE)))
     elif "dpnp" == pkg:
+        dpnp.random.seed(1)
         for i in range(count):
-            arr_list.append(dpnp.arange(1, NSIZE * NSIZE + 1, dtype=DTYPE).reshape((NSIZE, NSIZE)))
+            arr_list.append(dpnp.random.rand((NSIZE, NSIZE)).astype(DTYPE))
     elif "numpy" == pkg:
+        np.random.rand(1)
         for i in range(count):
-            arr_list.append(np.arange(1, NSIZE * NSIZE + 1, dtype=DTYPE).reshape((NSIZE, NSIZE)))
+            arr_list.append(np.random.rand((NSIZE, NSIZE)).astype(DTYPE))
 
     return arr_list
 
@@ -70,8 +74,29 @@ class TestFFT:
         setup = lambda: (generate_arrays(pkg, 1), {})
 
         result = benchmark.pedantic(
-            target=pkg.fft.fft,
+            target=FUNCS[pkg.__name__],
             setup=setup,
             rounds=ROUNDS,
             iterations=ITERATIONS
         )
+
+def fft_af(arr):
+    res = af.fft(arr)
+    af.eval(res)
+    af.sync()
+
+    return res
+
+def fft_np(arr):
+    return np.fft.fft(arr)
+
+def fft_dpnp(arr):
+    return dpnp.fft.fft(arr)
+
+def fft_cupy(arr):
+    res = cupy.fft.fft(arr)
+    cupy.cuda.runtime.deviceSynchronize()
+    return res
+
+FUNCS = { "dpnp" : fft_dpnp , "numpy" : fft_np, \
+         "cupy" : fft_cupy , "arrayfire" : fft_af }

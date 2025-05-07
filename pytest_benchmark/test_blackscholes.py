@@ -103,6 +103,8 @@ def black_scholes_cupy(S, X, R, V, T):
     C = S * cnd_d1 - (X * cupy.exp((-R) * T) * cnd_d2)
     P = X * cupy.exp((-R) * T) * (1 - cnd_d2) - (S * (1 -cnd_d1))
 
+    cupy.cuda.runtime.deviceSynchronize()
+
     return (C, P)
 
 def black_scholes_arrayfire(S, X, R, V, T):
@@ -137,13 +139,13 @@ def generate_arrays(pkg, count):
         cupy.cuda.runtime.deviceSynchronize()
     elif "arrayfire" == pkg:
         for i in range(count):  
-            arr_list.append(af.randu(MSIZE, NSIZE))
+            arr_list.append(af.randu((MSIZE, NSIZE), dtype=getattr(af, DTYPE)))
     elif "dpnp" == pkg:
         for i in range(count):
-            arr_list.append(dpnp.random.rand(MSIZE, NSIZE))
+            arr_list.append(dpnp.random.rand(MSIZE, NSIZE).astype(DTYPE))
     elif "numpy" == pkg:
         for i in range(count):
-            arr_list.append(np.random.rand(MSIZE, NSIZE))
+            arr_list.append(np.random.rand(MSIZE, NSIZE).astype(DTYPE))
 
     return arr_list
 
