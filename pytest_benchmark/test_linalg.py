@@ -48,21 +48,20 @@ def generate_arrays(pkg, count):
     if "cupy" == pkg:
         cupy.random.seed(1)
         for i in range(count):
-            arr_list.append(cupy.random.rand((NSIZE, NSIZE), dtype=DTYPE))
+            arr_list.append(cupy.random.rand(NSIZE, NSIZE, dtype=DTYPE))
         cupy.cuda.runtime.deviceSynchronize()
     elif "arrayfire" == pkg:
-        af.set_seed(1)
         af.device_gc()
         for i in range(count):  
             arr_list.append(af.randu((NSIZE, NSIZE), dtype=getattr(af, DTYPE)))
     elif "dpnp" == pkg:
         dpnp.random.seed(1)
         for i in range(count):
-            arr_list.append(dpnp.random.rand((NSIZE, NSIZE)).astype(DTYPE))
+            arr_list.append(dpnp.random.rand(NSIZE, NSIZE).astype(DTYPE))
     elif "numpy" == pkg:
         np.random.rand(1)
         for i in range(count):
-            arr_list.append(np.random.rand((NSIZE, NSIZE)).astype(DTYPE))
+            arr_list.append(np.random.rand(NSIZE, NSIZE).astype(DTYPE))
 
     return arr_list
 

@@ -296,7 +296,7 @@ def generate_arrays(pkg, count):
     pkg = pkg.__name__
     if "cupy" == pkg:
         for i in range(count):
-            arr_list.append(cupy.arange((NSIZE, NSIZE), dtype=DTYPE))
+            arr_list.append(cupy.random.rand(NSIZE, NSIZE, dtype=DTYPE))
         cupy.cuda.runtime.deviceSynchronize()
     elif "arrayfire" == pkg:
         af.device_gc()
@@ -304,9 +304,9 @@ def generate_arrays(pkg, count):
             arr_list.append(af.randu((NSIZE, NSIZE), dtype=getattr(af, DTYPE)))
     elif "dpnp" == pkg:
         for i in range(count):
-            arr_list.append(dpnp.random.rand((NSIZE, NSIZE)).astype(DTYPE))
+            arr_list.append(dpnp.random.rand(NSIZE, NSIZE).astype(DTYPE))
     elif "numpy" == pkg:
         for i in range(count):
-            arr_list.append(np.random.rand((NSIZE, NSIZE)).astype(DTYPE))
+            arr_list.append(np.random.rand(NSIZE, NSIZE).astype(DTYPE))
 
     return arr_list

@@ -43,7 +43,6 @@ def in_circle(x, y):
     return (x*x + y*y) < 1
 
 def calc_pi_af(samples):
-    af.random.set_seed(1)
     x = af.randu(samples)
     y = af.randu(samples)
     result =  4 * af.sum(in_circle(x, y)) / samples

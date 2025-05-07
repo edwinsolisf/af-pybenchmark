@@ -47,7 +47,6 @@ def setup():
         np.random.seed(1)
         dpnp.random.seed(1)
         cupy.random.seed(1)
-        af.set_seed(1)
 
 def randn_np():
     arr = np.random.normal(size=(NNUMBERS))
