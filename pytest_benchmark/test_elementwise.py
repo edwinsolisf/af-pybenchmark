@@ -49,7 +49,7 @@ class TestElementwise:
         setup = lambda: ([generate_arrays(pkg, 1)[0] / (NSIZE * NSIZE)], {})
 
         def func(arr):
-            return pkg.exp(pkg.cos(pkg.asinh(arr))) +\
+            return pkg.exp(pkg.cos(pkg.sinh(arr))) +\
                 pkg.cbrt(pkg.log(arr) * pkg.expm1(-pkg.sqrt(arr)))
 
         result = benchmark.pedantic(
