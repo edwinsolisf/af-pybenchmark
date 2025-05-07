@@ -117,7 +117,7 @@ class TestLinalg:
     #     )
     def test_cholesky(self, benchmark, pkg):
         arr = generate_arrays(pkg, 1)[0]
-        setup = lambda: ([arr + arr.T], {})
+        setup = lambda: ([pkg.matmul(arr, arr.T)], {})
 
         if pkg.__name__ == 'arrayfire':
             result = benchmark.pedantic(
@@ -154,11 +154,11 @@ class TestLinalg:
     
     def test_inv(self, benchmark, pkg):
         arr = generate_arrays(pkg, 1)[0]
-        setup = lambda: ([arr @ arr.T], {})
+        setup = lambda: ([pkg.matmul(arr,arr.T)], {})
 
         if pkg.__name__ == 'arrayfire':
             result = benchmark.pedantic(
-                target=pkg.inv,
+                target=pkg.inverse,
                 setup=setup,
                 rounds=ROUNDS,
                 iterations=ITERATIONS
@@ -176,7 +176,7 @@ class TestLinalg:
 
         if pkg.__name__ == 'arrayfire':
             result = benchmark.pedantic(
-                target=pkg.pinv,
+                target=pkg.pinverse,
                 setup=setup,
                 rounds=ROUNDS,
                 iterations=ITERATIONS

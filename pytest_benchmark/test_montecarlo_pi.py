@@ -47,7 +47,7 @@ def calc_pi_af(samples):
     y = af.randu(samples)
     result =  4 * af.sum(in_circle(x, y)) / samples
 
-    af.eval(result)
+    # af.eval(result)
     af.sync()
 
     return result
