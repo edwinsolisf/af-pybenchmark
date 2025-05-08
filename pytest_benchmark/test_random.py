@@ -39,9 +39,6 @@ NNUMBERS = 2**16
 PKGS = [dpnp, np, cupy, af]
 IDS = [pkg.__name__ for pkg in PKGS]
 
-@pytest.mark.parametrize(
-    "pkg", PKGS, ids=IDS
-)
 
 def setup():
         np.random.seed(1)
@@ -78,6 +75,9 @@ def randu_af():
     af.eval(arr)
     af.sync()
 
+@pytest.mark.parametrize(
+    "pkg", PKGS, ids=IDS
+)
 class TestRandom:
     def test_normal(self, benchmark, pkg):
         FUNCS = { "dpnp" : randn_dpnp , "numpy" : randn_np, \
