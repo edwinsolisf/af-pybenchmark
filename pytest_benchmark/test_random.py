@@ -40,11 +40,6 @@ PKGS = [dpnp, np, cupy, af]
 IDS = [pkg.__name__ for pkg in PKGS]
 
 
-def setup():
-        np.random.seed(1)
-        dpnp.random.seed(1)
-        cupy.random.seed(1)
-
 def randn_np():
     arr = np.random.normal(size=(NNUMBERS))
 
@@ -83,9 +78,12 @@ class TestRandom:
         FUNCS = { "dpnp" : randn_dpnp , "numpy" : randn_np, \
          "cupy" : randn_cupy , "arrayfire" : randn_af }
         
+        np.random.seed(1)
+        dpnp.random.seed(1)
+        cupy.random.seed(1)
+
         result = benchmark.pedantic(
             target=FUNCS[pkg.__name__],
-            setup=setup,
             rounds=ROUNDS,
             iterations=ITERATIONS
         )
@@ -95,9 +93,12 @@ class TestRandom:
         FUNCS = { "dpnp" : randu_dpnp , "numpy" : randu_np, \
          "cupy" : randu_cupy , "arrayfire" : randu_af }
         
+        np.random.seed(1)
+        dpnp.random.seed(1)
+        cupy.random.seed(1)
+
         result = benchmark.pedantic(
             target=FUNCS[pkg.__name__],
-            setup=setup,
             rounds=ROUNDS,
             iterations=ITERATIONS
         )
