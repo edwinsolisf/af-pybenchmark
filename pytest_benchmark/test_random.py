@@ -35,7 +35,7 @@ import cupy
 ROUNDS = 30
 ITERATIONS = 4
 
-NNUMBERS = 2**16
+NNUMBERS = 2**17
 PKGS = [dpnp, np, cupy, af]
 IDS = [pkg.__name__ for pkg in PKGS]
 

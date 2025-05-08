@@ -20,7 +20,7 @@ import cupy
 ROUNDS = 30
 ITERATIONS = 1
 
-SAMPLES = 2**8 # Array column size
+SAMPLES = 2**17 # Array column size
 
 DTYPE = "float32"
 PKGS = [dpnp, np, cupy, af]

@@ -3,7 +3,7 @@ import numpy as np
 import json
 
 PKG_NAMES = ['numpy', 'arrayfire', 'cupy', 'dpnp'] # package list in graph order
-tests = ['group_elementwise', 'pi', 'black_scholes', 'fft', 'inv', 'svd'] # Tests to be shown in graphs
+tests = [ 'cholesky', 'det', 'norm', 'normal', 'uniform', 'pi', 'black_scholes', 'fft', 'inv', 'svd', 'group_elementwise'] # Tests to be shown in graphs
 show_test_numbers = True # Show Speedup numbers
 round_numbers = 1 # Round to digits after decimal
 
@@ -48,7 +48,7 @@ def generate_individual_graphs():
 def generate_group_graph(test_list = None, show_numbers = False):
     results = get_benchmark_data()
 
-    width = 1 / (1 + len(PKG_NAMES))
+    width = 1 / (1 + len(test_list))
     multiplier = 0
 
     tests = None
@@ -91,7 +91,7 @@ def generate_group_graph(test_list = None, show_numbers = False):
 
     ax.set_ylabel('Speedup')
     ax.set_title('Runtime Comparison')
-    ax.set_xticks(x + width, tests)
+    ax.set_xticks(x + width, tests, rotation=45)
     ax.set_ylim([0.0, max_val * 1.25])
     ax.legend(loc='upper left', ncols=len(PKG_NAMES))
 

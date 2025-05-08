@@ -36,7 +36,6 @@ ROUNDS = 30
 ITERATIONS = 1
 
 NSIZE = 2**8 # Array column size
-NTSIZE = 2**4 # Tensor column size
 
 DTYPE = "float32"
 PKGS = [dpnp, np, cupy, af]
