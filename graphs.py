@@ -48,7 +48,7 @@ def generate_individual_graphs():
 def generate_group_graph(test_list = None, show_numbers = False):
     results = get_benchmark_data()
 
-    width = 1 / (1 + len(test_list))
+    width = 1 / (1 + len(PKG_NAMES))
     multiplier = 0
 
     tests = None
@@ -86,13 +86,13 @@ def generate_group_graph(test_list = None, show_numbers = False):
         offset = width * multiplier
         rects = ax.bar(x + offset, tests_values[name], width, label=name)
         if show_numbers:
-            ax.bar_label(rects, padding=3)
+            ax.bar_label(rects, padding=3, rotation=90)
         multiplier += 1
 
     ax.set_ylabel('Speedup')
     ax.set_title('Runtime Comparison')
     ax.set_xticks(x + width, tests, rotation=45)
-    ax.set_ylim([0.0, max_val * 1.25])
+    ax.set_ylim([0.0, min(30, max_val * 1.25)])
     ax.legend(loc='upper left', ncols=len(PKG_NAMES))
 
     fig.savefig("img/comparison.png")

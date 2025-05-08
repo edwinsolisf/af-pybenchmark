@@ -35,7 +35,7 @@ import cupy
 ROUNDS = 30
 ITERATIONS = 1
 
-NSIZE = 2**17 # Array column size
+NSIZE = 2**9 # Array column size
 
 DTYPE = "float32"
 PKGS = [dpnp, np, cupy, af]
