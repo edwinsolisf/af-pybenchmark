@@ -90,9 +90,10 @@ def generate_group_graph(test_list = None, show_numbers = False):
         multiplier += 1
 
     ax.set_ylabel('Speedup')
+    ax.set_yscale('log')
     ax.set_title('Runtime Comparison')
     ax.set_xticks(x + width, tests, rotation=45)
-    ax.set_ylim([0.0, min(30, max_val * 1.25)])
+    ax.set_ylim([0.0, max_val * 1.25])
     ax.legend(loc='upper left', ncols=len(PKG_NAMES))
 
     fig.savefig("img/comparison.png")
