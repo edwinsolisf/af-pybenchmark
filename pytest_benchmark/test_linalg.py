@@ -25,24 +25,13 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 # *****************************************************************************
 
-import pytest
+from common import *
 
-import arrayfire as af
-import numpy as np
-import dpnp
-import cupy
-
-ROUNDS = 30
 ITERATIONS = 1
 
-NSIZE = 2**8 # Array column size
-
-DTYPE = "float32"
-PKGS = [dpnp, np, cupy, af]
-IDS = [pkg.__name__ for pkg in PKGS]
-
-def generate_arrays(pkg, count):
+def generate_arrays(pkgid, count):
     arr_list = []
+    pkg = PKGDICT[pkgid]
     pkg = pkg.__name__
     if "cupy" == pkg:
         cupy.random.seed(1)
@@ -65,12 +54,12 @@ def generate_arrays(pkg, count):
     return arr_list
 
 @pytest.mark.parametrize(
-    "pkg", PKGS, ids=IDS
+    "pkgid", IDS, ids=IDS
 )
 class Eindot:
-    def test_dot_a_b(self, benchmark, pkg):
-        setup = lambda: (generate_arrays(pkg, 2), {})
-
+    def test_dot_a_b(self, benchmark, pkgid):
+        setup = lambda: (generate_arrays(pkgid, 2), {})
+        pkg = PKGDICT[pkgid]
         result = benchmark.pedantic(
             target=pkg.dot,
             setup=setup,
@@ -78,9 +67,9 @@ class Eindot:
             iterations=ITERATIONS,
         )
 
-    def test_matmul_a_b(self, benchmark, pkg):
-        setup = lambda: (generate_arrays(pkg, 2), {})
-
+    def test_matmul_a_b(self, benchmark, pkgid):
+        setup = lambda: (generate_arrays(pkgid, 2), {})
+        pkg = PKGDICT[pkgid]
         result = benchmark.pedantic(
             target=pkg.matmul,
             setup=setup,
@@ -88,10 +77,10 @@ class Eindot:
             iterations=ITERATIONS,
         )
 
-    def test_matmul_a_bt(self, benchmark, pkg):
-        a, b = generate_arrays(pkg, 2)
+    def test_matmul_a_bt(self, benchmark, pkgid):
+        a, b = generate_arrays(pkgid, 2)
         setup = lambda: ([a, b.T], {})
-
+        pkg = PKGDICT[pkgid]
         result = benchmark.pedantic(
             target=pkg.matmul,
             setup=setup,
@@ -101,7 +90,7 @@ class Eindot:
 
         
 @pytest.mark.parametrize(
-    "pkg", PKGS, ids=IDS
+    "pkgid", IDS, ids=IDS
 )
 class TestLinalg:
     # def test_lstsq(self, benchmark, pkg):
@@ -114,10 +103,12 @@ class TestLinalg:
     #         rounds=ROUNDS,
     #         iterations=ITERATIONS,
     #     )
-    def test_cholesky(self, benchmark, pkg):
-        arr = generate_arrays(pkg, 1)[0]
+    def test_cholesky(self, benchmark, pkgid):
+        arr = generate_arrays(pkgid, 1)[0]
+        pkg = PKGDICT[pkgid]
         setup = lambda: ([pkg.matmul(arr.T, arr) + pkg.matmul(arr.T, arr).T], {})
 
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
         if pkg.__name__ == 'arrayfire':
             result = benchmark.pedantic(
                 target=pkg.cholesky,
@@ -133,9 +124,10 @@ class TestLinalg:
                 iterations=ITERATIONS
             )
 
-    def test_svd(self, benchmark, pkg):
-        setup = lambda: (generate_arrays(pkg, 1), {})
-
+    def test_svd(self, benchmark, pkgid):
+        setup = lambda: (generate_arrays(pkgid, 1), {})
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
+        pkg = PKGDICT[pkgid]
         if pkg.__name__ == 'arrayfire':
             result = benchmark.pedantic(
                 target=pkg.svd,
@@ -151,10 +143,12 @@ class TestLinalg:
                 iterations=ITERATIONS
             )
     
-    def test_inv(self, benchmark, pkg):
-        arr = generate_arrays(pkg, 1)[0]
+    def test_inv(self, benchmark, pkgid):
+        arr = generate_arrays(pkgid, 1)[0]
+        pkg = PKGDICT[pkgid]
         setup = lambda: ([pkg.matmul(arr,arr)], {})
 
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
         if pkg.__name__ == 'arrayfire':
             result = benchmark.pedantic(
                 target=pkg.inverse,
@@ -170,9 +164,11 @@ class TestLinalg:
                 iterations=ITERATIONS
             )
 
-    def test_pinv(self, benchmark, pkg):
-        setup = lambda: (generate_arrays(pkg, 1), {})
+    def test_pinv(self, benchmark, pkgid):
+        setup = lambda: (generate_arrays(pkgid, 1), {})
 
+        pkg = PKGDICT[pkgid]
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
         if pkg.__name__ == 'arrayfire':
             result = benchmark.pedantic(
                 target=pkg.pinverse,
@@ -188,9 +184,11 @@ class TestLinalg:
                 iterations=ITERATIONS
             )
 
-    def test_det(self, benchmark, pkg):
-        arr = generate_arrays(pkg, 1)[0]
+    def test_det(self, benchmark, pkgid):
+        arr = generate_arrays(pkgid, 1)[0]
+        pkg = PKGDICT[pkgid]
         setup = lambda: ([pkg.matmul(arr, arr.T)], {})
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
 
         if pkg.__name__ == 'arrayfire':
             result = benchmark.pedantic(
@@ -207,8 +205,10 @@ class TestLinalg:
                 iterations=ITERATIONS
             )
     
-    def test_norm(self, benchmark, pkg):
-        setup = lambda: (generate_arrays(pkg, 1), {})
+    def test_norm(self, benchmark, pkgid):
+        setup = lambda: (generate_arrays(pkgid, 1), {})
+        pkg = PKGDICT[pkgid]
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
 
         if pkg.__name__ == 'arrayfire':
             result = benchmark.pedantic(

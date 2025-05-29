@@ -25,33 +25,23 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 # *****************************************************************************
 
-import pytest
+from common import *
 
-import arrayfire as af
-import numpy as np
-import dpnp
-import cupy
-
-ROUNDS = 30
 ITERATIONS = 1
 
-NSIZE = 2**9 # Array column size
-
-DTYPE = "float32"
-PKGS = [dpnp, np, cupy, af]
-IDS = [pkg.__name__ for pkg in PKGS]
-
 @pytest.mark.parametrize(
-    "pkg", PKGS, ids=IDS
+    "pkgid", IDS, ids=IDS
 )
 class TestElementwise:
-    def test_group_elementwise(self, benchmark, pkg):
-        setup = lambda: ([generate_arrays(pkg, 1)[0] / (NSIZE * NSIZE)], {})
+    def test_group_elementwise(self, benchmark, pkgid):
+        setup = lambda: ([generate_arrays(pkgid, 1)[0] / (NSIZE * NSIZE)], {})
+        pkg = PKGDICT[pkgid]
 
         def func(arr):
             return pkg.exp(pkg.cos(pkg.sinh(arr))) +\
                 pkg.cbrt(pkg.log(arr) * pkg.expm1(-pkg.sqrt(arr)))
 
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
         result = benchmark.pedantic(
             target=func,
             setup=setup,
@@ -291,9 +281,13 @@ class TestElementwise:
         )
     '''
 
-def generate_arrays(pkg, count):
+def generate_arrays(pkgid, count):
     arr_list = []
+
+    initialize_package(pkgid)
+    pkg = PKGDICT[pkgid]
     pkg = pkg.__name__
+
     if "cupy" == pkg:
         for i in range(count):
             arr_list.append(cupy.random.rand(NSIZE, NSIZE, dtype=DTYPE))

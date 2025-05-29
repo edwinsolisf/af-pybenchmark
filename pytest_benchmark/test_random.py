@@ -25,63 +25,52 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 # *****************************************************************************
 
-import pytest
+from common import *
 
-import arrayfire as af
-import numpy as np
-import dpnp
-import cupy
-
-ROUNDS = 30
-ITERATIONS = 4
-
-NNUMBERS = 2**17
-PKGS = [dpnp, np, cupy, af]
-IDS = [pkg.__name__ for pkg in PKGS]
-
+ITERATIONS = 20
 
 def randn_np():
-    arr = np.random.normal(size=(NNUMBERS))
+    arr = np.random.normal(size=(NNSIZE))
 
 def randn_dpnp():
-    arr = dpnp.random.normal(size=(NNUMBERS))
+    arr = dpnp.random.normal(size=(NNSIZE))
 
 def randn_cupy():
-    arr = cupy.random.normal(size=(NNUMBERS))
+    arr = cupy.random.normal(size=(NNSIZE))
     cupy.cuda.runtime.deviceSynchronize()
 
 def randn_af():
-    arr = af.randn((NNUMBERS))
+    arr = af.randn((NNSIZE))
     af.eval(arr)
     af.sync()
 
 def randu_np():
-    arr = np.random.uniform(size=(NNUMBERS))
+    arr = np.random.uniform(size=(NNSIZE))
 
 def randu_dpnp():
-    arr = dpnp.random.uniform(size=(NNUMBERS))
+    arr = dpnp.random.uniform(size=(NNSIZE))
 
 def randu_cupy():
-    arr = cupy.random.uniform(size=(NNUMBERS))
+    arr = cupy.random.uniform(size=(NNSIZE))
     cupy.cuda.runtime.deviceSynchronize()
 
 def randu_af():
-    arr = af.randu((NNUMBERS))
+    arr = af.randu((NNSIZE))
     af.eval(arr)
     af.sync()
 
 @pytest.mark.parametrize(
-    "pkg", PKGS, ids=IDS
+    "pkgid", IDS, ids=IDS
 )
 class TestRandom:
-    def test_normal(self, benchmark, pkg):
+    def test_normal(self, benchmark, pkgid):
+        initialize_package(pkgid)
+
+        pkg = PKGDICT[pkgid]
         FUNCS = { "dpnp" : randn_dpnp , "numpy" : randn_np, \
          "cupy" : randn_cupy , "arrayfire" : randn_af }
         
-        np.random.seed(1)
-        dpnp.random.seed(1)
-        cupy.random.seed(1)
-
+        benchmark.extra_info["description"] = f"{NNSIZE:.2e} Samples"
         result = benchmark.pedantic(
             target=FUNCS[pkg.__name__],
             rounds=ROUNDS,
@@ -89,13 +78,12 @@ class TestRandom:
         )
 
     
-    def test_uniform(self, benchmark, pkg):
+    def test_uniform(self, benchmark, pkgid):
+        initialize_package(pkgid)
+
+        pkg = PKGDICT[pkgid]
         FUNCS = { "dpnp" : randu_dpnp , "numpy" : randu_np, \
          "cupy" : randu_cupy , "arrayfire" : randu_af }
-        
-        np.random.seed(1)
-        dpnp.random.seed(1)
-        cupy.random.seed(1)
 
         result = benchmark.pedantic(
             target=FUNCS[pkg.__name__],

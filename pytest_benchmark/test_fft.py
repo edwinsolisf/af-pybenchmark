@@ -25,24 +25,14 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 # *****************************************************************************
 
-import pytest
+from common import *
 
-import arrayfire as af
-import numpy as np
-import dpnp
-import cupy
-
-ROUNDS = 30
 ITERATIONS = 1
 
-NSIZE = 2**8 # Array column size
-
-DTYPE = "float32"
-PKGS = [dpnp, np, cupy, af]
-IDS = [pkg.__name__ for pkg in PKGS]
-
-def generate_arrays(pkg, count):
+def generate_arrays(pkgid, count):
     arr_list = []
+    initialize_package(pkgid)
+    pkg = PKGDICT[pkgid]
     pkg = pkg.__name__
     
     if "cupy" == pkg:
@@ -66,12 +56,14 @@ def generate_arrays(pkg, count):
     return arr_list
 
 @pytest.mark.parametrize(
-    "pkg", PKGS, ids=IDS
+    "pkgid", IDS, ids=IDS
 )
 class TestFFT:
-    def test_fft(self, benchmark, pkg):
-        setup = lambda: (generate_arrays(pkg, 1), {})
+    def test_fft(self, benchmark, pkgid):
+        setup = lambda: (generate_arrays(pkgid, 1), {})
+        pkg = PKGDICT[pkgid]
 
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
         result = benchmark.pedantic(
             target=FUNCS[pkg.__name__],
             setup=setup,

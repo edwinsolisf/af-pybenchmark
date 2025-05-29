@@ -9,34 +9,21 @@
 # http://arrayfire.com/licenses/BSD-3-Clause
 ########################################################
 
-import pytest
+from common import *
 
-import arrayfire as af
-import numpy as np
-import dpnp
-import cupy
-
-import math
-
-ROUNDS = 30
 ITERATIONS = 1
-
-MSIZE = 4000 # Array column size
-NSIZE = 100
-
-DTYPE = "float32"
-PKGS = [dpnp, np, cupy, af]
-IDS = [pkg.__name__ for pkg in PKGS]
 
 sqrt2 = math.sqrt(2.0)
 
 @pytest.mark.parametrize(
-    "pkg", PKGS, ids=IDS
+    "pkgid", IDS, ids=IDS
 )
 class TestBlackScholes:
-    def test_black_scholes(self, benchmark, pkg):
-        setup = lambda: (generate_arrays(pkg, 5), {})
+    def test_black_scholes(self, benchmark, pkgid):
+        setup = lambda: (generate_arrays(pkgid, 5), {})
+        pkg = PKGDICT[pkgid]
 
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
         result = benchmark.pedantic(
             target=FUNCS[pkg.__name__],
             setup=setup,
@@ -130,22 +117,24 @@ def black_scholes_arrayfire(S, X, R, V, T):
     return (C, P)
 
 
-def generate_arrays(pkg, count):
+def generate_arrays(pkgid, count):
     arr_list = []
+    initialize_package(pkgid)
+    pkg = PKGDICT[pkgid]
     pkg = pkg.__name__
     if "cupy" == pkg:
         for i in range(count):
-            arr_list.append(cupy.random.rand(MSIZE, NSIZE, dtype=DTYPE))
+            arr_list.append(cupy.random.rand(NSIZE, NSIZE, dtype=DTYPE))
         cupy.cuda.runtime.deviceSynchronize()
     elif "arrayfire" == pkg:
         for i in range(count):  
-            arr_list.append(af.randu((MSIZE, NSIZE), dtype=getattr(af, DTYPE)))
+            arr_list.append(af.randu((NSIZE, NSIZE), dtype=getattr(af, DTYPE)))
     elif "dpnp" == pkg:
         for i in range(count):
-            arr_list.append(dpnp.random.rand(MSIZE, NSIZE).astype(DTYPE))
+            arr_list.append(dpnp.random.rand(NSIZE, NSIZE).astype(DTYPE))
     elif "numpy" == pkg:
         for i in range(count):
-            arr_list.append(np.random.rand(MSIZE, NSIZE).astype(DTYPE))
+            arr_list.append(np.random.rand(NSIZE, NSIZE).astype(DTYPE))
 
     return arr_list
 
