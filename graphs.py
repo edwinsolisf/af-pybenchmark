@@ -3,8 +3,10 @@ import numpy as np
 import json
 
 PKG_NAMES = ['numpy', 'afcuda', 'cupy', 'dpnp'] # package list in graph order
-# tests = [ 'cholesky', 'det', 'norm', 'normal', 'uniform', 'pi', 'black_scholes', 'fft', 'inv', 'svd', 'group_elementwise'] # Tests to be shown in graphs
 tests = [ 'cholesky', 'neural_network', 'gemm', 'mandelbrot', 'nbody', 'pi', 'black_scholes', 'fft', 'group_elementwise'] # Tests to be shown in graphs
+
+# tests = [ 'cholesky', 'det', 'norm', 'normal', 'uniform', 'inv', 'svd'] # Other tests 
+
 show_test_numbers = True # Show Speedup numbers
 round_numbers = 1 # Round to digits after decimal
 
@@ -50,7 +52,7 @@ def generate_individual_graphs():
         create_graph(test, results[test])
 
 
-def generate_group_graph(test_list = None, show_numbers = False):
+def generate_group_graph(test_list = None, show_numbers = False, filename = "comparison"):
     results, descriptions = get_benchmark_data()
 
     width = 1 / (1 + len(PKG_NAMES))
@@ -106,11 +108,17 @@ def generate_group_graph(test_list = None, show_numbers = False):
     ax.legend(loc='lower right', ncols=len(PKG_NAMES))
     fig.set_figheight(8)
     fig.set_figwidth(12)
-    fig.savefig("img/comparison.png")
+    fig.savefig(f"img/{filename}.png")
     plt.show()
     
 def main():
-    generate_group_graph(tests, show_test_numbers)
+    backends = ['afcuda', 'afopencl', 'afoneapi']
+    for backend in backends:
+        filename = f"comparison_{backend}"
+        if not backend in PKG_NAMES:
+            PKG_NAMES.insert(1, backend)
+        generate_group_graph(tests, show_test_numbers, filename)
+        PKG_NAMES.remove(backend)
 
 if __name__ == "__main__":
     main()

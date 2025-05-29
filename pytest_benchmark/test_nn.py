@@ -5,8 +5,8 @@ HIDDEN_SIZE = 100
 OUTPUT_SIZE = 10
 LEARNING_RATE = 0.01
 ITERATIONS = 10
-BATCH_SIZE = 64
-SAMPLES = 1280
+BATCH_SIZE = 256
+SAMPLES = 2560
 
 @pytest.mark.parametrize(
     "pkgid", IDS, ids=IDS
@@ -43,8 +43,9 @@ class NeuralNetwork_numpy:
         self.b2 = np.zeros((1, self.output_size))
 
         self.X_train = np.random.rand(SAMPLES,INPUT_SIZE)
-        self.y_train = np.zeros((SAMPLES, OUTPUT_SIZE))
-        self.y_train[:, np.floor(np.random.rand(SAMPLES) * OUTPUT_SIZE).astype(int)] = 1
+        self.y_train = np.zeros((SAMPLES * OUTPUT_SIZE))
+        self.y_train[np.arange(SAMPLES) * OUTPUT_SIZE + np.floor(np.random.rand(SAMPLES) * OUTPUT_SIZE).astype(int)] = 1
+        self.y_train = self.y_train.reshape((SAMPLES, OUTPUT_SIZE))
 
     def relu(self, x):
         return np.maximum(0, x)
@@ -123,8 +124,9 @@ class NeuralNetwork_dpnp:
         self.b2 = dpnp.zeros((1, self.output_size))
 
         self.X_train = dpnp.random.rand(SAMPLES, INPUT_SIZE)
-        self.y_train = dpnp.zeros((SAMPLES, OUTPUT_SIZE))
-        self.y_train[:, dpnp.floor(dpnp.random.rand(SAMPLES) * OUTPUT_SIZE).astype(int)] = 1
+        self.y_train = dpnp.zeros((SAMPLES * OUTPUT_SIZE))
+        self.y_train[dpnp.arange(SAMPLES) * OUTPUT_SIZE + dpnp.floor(dpnp.random.rand(SAMPLES) * OUTPUT_SIZE).astype(int)] = 1
+        self.y_train = self.y_train.reshape((SAMPLES, OUTPUT_SIZE))
 
     def relu(self, x):
         return dpnp.maximum(0, x)
@@ -202,8 +204,9 @@ class NeuralNetwork_cupy:
         self.b2 = cupy.zeros((1, self.output_size))
 
         self.X_train = cupy.random.rand(SAMPLES, INPUT_SIZE)
-        self.y_train = cupy.zeros((SAMPLES, OUTPUT_SIZE))
-        self.y_train[:, cupy.floor(cupy.random.rand(SAMPLES) * OUTPUT_SIZE).astype(int)] = 1
+        self.y_train = cupy.zeros((SAMPLES * OUTPUT_SIZE))
+        self.y_train[cupy.arange(SAMPLES) * OUTPUT_SIZE + cupy.floor(cupy.random.rand(SAMPLES) * OUTPUT_SIZE).astype(int)] = 1
+        self.y_train = self.y_train.reshape((SAMPLES, OUTPUT_SIZE))
 
         cupy.cuda.runtime.deviceSynchronize()
 
@@ -285,16 +288,21 @@ class NeuralNetwork_af:
 
         self.X_train = af.randu((SAMPLES, INPUT_SIZE))
         self.y_train = af.constant(0, (SAMPLES, OUTPUT_SIZE))
-        self.y_train = af.select(1, self.y_train, af.range((SAMPLES, OUTPUT_SIZE), axis=1) == af.tile(af.floor(af.randu((SAMPLES)) * OUTPUT_SIZE), (1, OUTPUT_SIZE)))
+
+        self.y_train = np.zeros((SAMPLES * OUTPUT_SIZE))
+        self.y_train[np.arange(SAMPLES) * OUTPUT_SIZE + np.floor(np.random.rand(SAMPLES) * OUTPUT_SIZE).astype(int)] = 1
+        self.y_train = af.Array(self.y_train.tolist(), shape = (SAMPLES, OUTPUT_SIZE))
         af.eval(self.X_train)
         af.eval(self.y_train)
         af.sync()
 
     def relu(self, x):
-        return af.select(x, 0, x > 0)
+        selection = x > 0
+        return af.Array.from_afarray(af.select(x, af.constant(0, x.shape), selection))
 
     def relu_derivative(self, x):
-        return af.select(1, 0, x > 0)
+        selection = x > 0
+        return af.Array.from_afarray(af.select(1, af.constant(0, x.shape), selection))
 
     def softmax(self, x):
         exp_scores = af.exp(x - af.max(x, axis=1)) # Subtract max for numerical stability
