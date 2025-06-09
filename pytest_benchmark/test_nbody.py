@@ -39,7 +39,6 @@ def acceleration(pkg, mass, pos):
     ax = G * (dx * inv_r3) @ mass
     ay = G * (dy * inv_r3) @ mass
     az = G * (dz * inv_r3) @ mass
-    print(ax.shape, ay.shape, az.shape)
 
     return pkg.hstack((ax, ay, az))
 

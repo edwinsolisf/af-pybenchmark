@@ -3,7 +3,7 @@ import numpy as np
 import json
 
 PKG_NAMES = ['numpy', 'afcuda', 'cupy', 'dpnp'] # package list in graph order
-tests = [ 'cholesky', 'neural_network', 'gemm', 'mandelbrot', 'nbody', 'pi', 'black_scholes', 'fft', 'group_elementwise'] # Tests to be shown in graphs
+tests = [ 'svd', 'neural_network', 'gemm', 'mandelbrot', 'nbody', 'pi', 'black_scholes', 'fft', 'group_elementwise'] # Tests to be shown in graphs
 
 # tests = [ 'cholesky', 'det', 'norm', 'normal', 'uniform', 'inv', 'svd'] # Other tests 
 
@@ -104,7 +104,7 @@ def generate_group_graph(test_list = None, show_numbers = False, filename = "com
     ax.set_xscale('log')
     ax.set_title('Runtime Comparison')
     ax.set_yticks(x + width, xlabels, rotation=0)
-    # ax.set_ylim([0.0, max_val * 1.25])
+
     ax.legend(loc='lower right', ncols=len(PKG_NAMES))
     fig.set_figheight(8)
     fig.set_figwidth(12)
@@ -114,11 +114,14 @@ def generate_group_graph(test_list = None, show_numbers = False, filename = "com
 def main():
     backends = ['afcuda', 'afopencl', 'afoneapi']
     for backend in backends:
-        filename = f"comparison_{backend}"
-        if not backend in PKG_NAMES:
-            PKG_NAMES.insert(1, backend)
-        generate_group_graph(tests, show_test_numbers, filename)
-        PKG_NAMES.remove(backend)
+        try:
+            filename = f"comparison_{backend}"
+            if not backend in PKG_NAMES:
+                PKG_NAMES.insert(1, backend)
+            generate_group_graph(tests, show_test_numbers, filename)
+            PKG_NAMES.remove(backend)
+        except:
+            print("No data for", backend)
 
 if __name__ == "__main__":
     main()

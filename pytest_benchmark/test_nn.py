@@ -1,12 +1,12 @@
 from common import *
 
 INPUT_SIZE = 28 * 28
-HIDDEN_SIZE = 100
+HIDDEN_SIZE = 1000
 OUTPUT_SIZE = 10
 LEARNING_RATE = 0.01
 ITERATIONS = 10
-BATCH_SIZE = 256
-SAMPLES = 2560
+BATCH_SIZE = 2560
+SAMPLES = 25600
 
 @pytest.mark.parametrize(
     "pkgid", IDS, ids=IDS
@@ -268,6 +268,8 @@ class NeuralNetwork_cupy:
                 # Backward pass and update weights
                 self.backward(X_batch, y_batch, output)
 
+        cupy.cuda.runtime.deviceSynchronize()
+
     def predict(self, X):
         return cupy.argmax(self.forward(X), axis=1)
     
@@ -288,21 +290,24 @@ class NeuralNetwork_af:
 
         self.X_train = af.randu((SAMPLES, INPUT_SIZE))
         self.y_train = af.constant(0, (SAMPLES, OUTPUT_SIZE))
+    
+        self.y_train = af.constant(0, (SAMPLES, OUTPUT_SIZE))
+        self.y_train[af.iota(SAMPLES), af.floor(af.randu(SAMPLES) * OUTPUT_SIZE)] = 1
 
-        self.y_train = np.zeros((SAMPLES * OUTPUT_SIZE))
-        self.y_train[np.arange(SAMPLES) * OUTPUT_SIZE + np.floor(np.random.rand(SAMPLES) * OUTPUT_SIZE).astype(int)] = 1
-        self.y_train = af.Array(self.y_train.tolist(), shape = (SAMPLES, OUTPUT_SIZE))
         af.eval(self.X_train)
         af.eval(self.y_train)
+        af.eval(self.W1)
+        af.eval(self.W2)
+        af.eval(self.b1)
+        af.eval(self.b2)
         af.sync()
 
     def relu(self, x):
         selection = x > 0
-        return af.Array.from_afarray(af.select(x, af.constant(0, x.shape), selection))
+        return af.select(x, 0, selection)
 
     def relu_derivative(self, x):
-        selection = x > 0
-        return af.Array.from_afarray(af.select(1, af.constant(0, x.shape), selection))
+        return af.cast(x > 0, getattr(af, DTYPE))
 
     def softmax(self, x):
         exp_scores = af.exp(x - af.max(x, axis=1)) # Subtract max for numerical stability
@@ -355,6 +360,12 @@ class NeuralNetwork_af:
 
                 # Backward pass and update weights
                 self.backward(X_batch, y_batch, output)
+
+        af.eval(self.W2)
+        af.eval(self.b2)
+        af.eval(self.W1)
+        af.eval(self.b1)
+        af.sync()
 
     def predict(self, X):
         return af.where(X == af.tile(af.max(self.forward(X), axis=1), (1, X.shape[1])))

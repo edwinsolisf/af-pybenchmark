@@ -4,7 +4,7 @@ ITERATIONS = 10
 TOLERANCE = 1e-4
 NSAMPLES = NSIZE * int(np.sqrt(NSIZE))
 NFEATURES = int(np.sqrt(NSIZE))
-K = 10
+K = 20
 
 @pytest.mark.parametrize(
     "pkgid", IDS, ids=IDS
@@ -213,8 +213,8 @@ class kmeans_af:
             np.ndarray: Initial centroids (k, n_features).
         """
 
-        # return self.data[self.centroid_indices, :]
-        return af.lookup(self.data, self.centroid_indices, axis=0)
+        return self.data[self.centroid_indices, :]
+        # return af.lookup(self.data, self.centroid_indices, axis=0)
 
     def assign_to_clusters(self, centroids):
         """
@@ -248,8 +248,7 @@ class kmeans_af:
         """
         new_centroids = af.constant(0, (K, self.data.shape[1]))
         for i in range(K):
-            # points_in_cluster = self.data[cluster_assignments == i]
-            points_in_cluster = af.lookup(self.data, af.where(cluster_assignments == i), axis=0)
+            points_in_cluster = self.data[:, af.where(cluster_assignments == i)]
             if len(points_in_cluster) > 0:
                 new_centroids[i] = af.mean(points_in_cluster, axis=0)
         return new_centroids

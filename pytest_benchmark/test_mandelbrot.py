@@ -8,14 +8,14 @@
 
 from common import *
 
-xmin = 0
-xmax = 1
-ymin = 0
-ymax = 1
+xmin = -2
+xmax = 2
+ymin = -2
+ymax = 2
 xn = NSIZE
 yn = NSIZE
 itermax = 20
-horizon=2.0
+horizon = 2.0
 
 @pytest.mark.parametrize(
     "pkgid", IDS, ids=IDS
@@ -40,7 +40,6 @@ def mandelbrot_np():
     Y = np.linspace(ymin, ymax, yn, dtype=np.float64)[Yi]
     C = X + Y * 1j
 
-    print(Xi.shape, Yi.shape, X.shape, Y.shape)
     N_ = np.zeros(C.shape, dtype=np.int64)
     Z_ = np.zeros(C.shape, dtype=np.complex128)
     Xi.shape = Yi.shape = C.shape = xn * yn
@@ -142,15 +141,15 @@ def mandelbrot_cupy():
     return Z_, N_
 
 def mandelbrot_af():
-    Xi = af.range((xn, yn), axis=0, dtype=af.int64)
-    Yi = af.range((xn, yn), axis=1, dtype=af.int64)
-    X = af.iota((xn,1), tile_shape=(1,yn), dtype=af.float64) * (xmax - xmin) / (xn - 1)
-    Y = af.iota((1,yn), tile_shape=(xn,1), dtype=af.float64) * (ymax - ymin) / (yn - 1)
+    Xi = af.flat(af.range((xn, yn), axis=0, dtype=af.int64))
+    Yi = af.flat(af.range((xn, yn), axis=1, dtype=af.int64))
+    X = af.iota((xn,1), tile_shape=(1,yn), dtype=af.float64) * (xmax - xmin) / (xn - 1) + xmin
+    Y = af.iota((1,yn), tile_shape=(xn,1), dtype=af.float64) * (ymax - ymin) / (yn - 1) + ymin
 
     C = af.cplx(X, Y)
-    N_ = af.constant(0, X.shape)
-    Z_ = af.constant(0, X.shape, dtype=af.complex64)
-    Z = af.constant(0, X.shape, dtype=af.complex64)
+    N_ = af.constant(0, (xn, yn))
+    Z_ = af.constant(0, (xn, yn), dtype=af.complex64)
+    Z = af.constant(0, (xn, yn), dtype=af.complex64)
     for i in range(itermax):
         if not len(Z):
             break
@@ -161,20 +160,24 @@ def mandelbrot_af():
 
         # Failed convergence
         I = af.abs(Z) > horizon  # noqa: E741 math variable
-        N_[Xi[I], Yi[I]] = i + 1
-        Z_[Xi[I], Yi[I]] = Z[I]
-        # N_[Xi[I] * yn + Yi[I]] = i + 1
-        # Z_[Xi[I] * yn + Yi[I]] = Z[i]
+
+        if not af.any_true(I):
+            break
+
+        N_[Xi[I] * yn + Yi[I]] = i + 1
+        Z_[Xi[I] * yn + Yi[I]] = Z[I]
 
         # Keep going with those who have not diverged yet
-        I = ~I 
+        I = af.logical_not(I) 
         Z = Z[I]
-        Xi, Yi = Xi[I], Yi[I]
+        Xi = Xi[I]
+        Yi = Yi[I]
         C = C[I]
 
     Z_ = Z_.T
     N_ = N_.T
-    af.eval(Z_, N_)
+    af.eval(Z_)
+    af.eval(N_)
     af.sync()
     return Z_, N_
 

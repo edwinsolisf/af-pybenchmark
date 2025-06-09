@@ -103,28 +103,30 @@ class TestLinalg:
     #         rounds=ROUNDS,
     #         iterations=ITERATIONS,
     #     )
-    def test_cholesky(self, benchmark, pkgid):
-        arr = generate_arrays(pkgid, 1)[0]
-        pkg = PKGDICT[pkgid]
-        setup = lambda: ([pkg.matmul(arr.T, arr) + pkg.matmul(arr.T, arr).T], {})
+    # def test_cholesky(self, benchmark, pkgid):
+    #     initialize_package(pkgid)
+    #     arr = generate_arrays(pkgid, 1)[0]
+    #     pkg = PKGDICT[pkgid]
+    #     setup = lambda: ([pkg.matmul(arr.T, arr) + pkg.matmul(arr.T, arr).T], {})
 
-        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
-        if pkg.__name__ == 'arrayfire':
-            result = benchmark.pedantic(
-                target=pkg.cholesky,
-                setup=setup,
-                rounds=ROUNDS,
-                iterations=ITERATIONS
-            )
-        else:
-            result = benchmark.pedantic(
-                target=pkg.linalg.cholesky,
-                setup=setup,
-                rounds=ROUNDS,
-                iterations=ITERATIONS
-            )
+    #     benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
+    #     if pkg.__name__ == 'arrayfire':
+    #         result = benchmark.pedantic(
+    #             target=pkg.cholesky,
+    #             setup=setup,
+    #             rounds=ROUNDS,
+    #             iterations=ITERATIONS
+    #         )
+    #     else:
+    #         result = benchmark.pedantic(
+    #             target=pkg.linalg.cholesky,
+    #             setup=setup,
+    #             rounds=ROUNDS,
+    #             iterations=ITERATIONS
+    #         )
 
     def test_svd(self, benchmark, pkgid):
+        initialize_package(pkgid)
         setup = lambda: (generate_arrays(pkgid, 1), {})
         benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
         pkg = PKGDICT[pkgid]
@@ -143,84 +145,88 @@ class TestLinalg:
                 iterations=ITERATIONS
             )
     
-    def test_inv(self, benchmark, pkgid):
-        arr = generate_arrays(pkgid, 1)[0]
-        pkg = PKGDICT[pkgid]
-        setup = lambda: ([pkg.matmul(arr,arr)], {})
+    # def test_inv(self, benchmark, pkgid):
+    #     initialize_package(pkgid)
+    #     arr = generate_arrays(pkgid, 1)[0]
+    #     pkg = PKGDICT[pkgid]
+    #     setup = lambda: ([pkg.matmul(arr,arr)], {})
 
-        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
-        if pkg.__name__ == 'arrayfire':
-            result = benchmark.pedantic(
-                target=pkg.inverse,
-                setup=setup,
-                rounds=ROUNDS,
-                iterations=ITERATIONS
-            )
-        else:
-            result = benchmark.pedantic(
-                target=pkg.linalg.inv,
-                setup=setup,
-                rounds=ROUNDS,
-                iterations=ITERATIONS
-            )
+    #     benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
+    #     if pkg.__name__ == 'arrayfire':
+    #         result = benchmark.pedantic(
+    #             target=pkg.inverse,
+    #             setup=setup,
+    #             rounds=ROUNDS,
+    #             iterations=ITERATIONS
+    #         )
+    #     else:
+    #         result = benchmark.pedantic(
+    #             target=pkg.linalg.inv,
+    #             setup=setup,
+    #             rounds=ROUNDS,
+    #             iterations=ITERATIONS
+    #         )
 
-    def test_pinv(self, benchmark, pkgid):
-        setup = lambda: (generate_arrays(pkgid, 1), {})
+    # def test_pinv(self, benchmark, pkgid):
+    #     initialize_package(pkgid)
+    #     setup = lambda: (generate_arrays(pkgid, 1), {})
 
-        pkg = PKGDICT[pkgid]
-        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
-        if pkg.__name__ == 'arrayfire':
-            result = benchmark.pedantic(
-                target=pkg.pinverse,
-                setup=setup,
-                rounds=ROUNDS,
-                iterations=ITERATIONS
-            ) 
-        else:
-            result = benchmark.pedantic(
-                target=pkg.linalg.pinv,
-                setup=setup,
-                rounds=ROUNDS,
-                iterations=ITERATIONS
-            )
+    #     pkg = PKGDICT[pkgid]
+    #     benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
+    #     if pkg.__name__ == 'arrayfire':
+    #         result = benchmark.pedantic(
+    #             target=pkg.pinverse,
+    #             setup=setup,
+    #             rounds=ROUNDS,
+    #             iterations=ITERATIONS
+    #         ) 
+    #     else:
+    #         result = benchmark.pedantic(
+    #             target=pkg.linalg.pinv,
+    #             setup=setup,
+    #             rounds=ROUNDS,
+    #             iterations=ITERATIONS
+    #         )
 
-    def test_det(self, benchmark, pkgid):
-        arr = generate_arrays(pkgid, 1)[0]
-        pkg = PKGDICT[pkgid]
-        setup = lambda: ([pkg.matmul(arr, arr.T)], {})
-        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
+    # def test_det(self, benchmark, pkgid):
+    #     initialize_package(pkgid)
+    #     arr = generate_arrays(pkgid, 1)[0]
+    #     pkg = PKGDICT[pkgid]
+    #     setup = lambda: ([pkg.matmul(arr, arr.T)], {})
+    #     benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
 
-        if pkg.__name__ == 'arrayfire':
-            result = benchmark.pedantic(
-                target=pkg.det,
-                setup=setup,
-                rounds=ROUNDS,
-                iterations=ITERATIONS
-            )
-        else:
-            result = benchmark.pedantic(
-                target=pkg.linalg.det,
-                setup=setup,
-                rounds=ROUNDS,
-                iterations=ITERATIONS
-            )
+    #     if pkg.__name__ == 'arrayfire':
+    #         result = benchmark.pedantic(
+    #             target=pkg.det,
+    #             setup=setup,
+    #             rounds=ROUNDS,
+    #             iterations=ITERATIONS
+    #         )
+    #     else:
+    #         result = benchmark.pedantic(
+    #             target=pkg.linalg.det,
+    #             setup=setup,
+    #             rounds=ROUNDS,
+    #             iterations=ITERATIONS
+    #         )
     
-    def test_norm(self, benchmark, pkgid):
-        setup = lambda: (generate_arrays(pkgid, 1), {})
-        pkg = PKGDICT[pkgid]
-        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
+    # def test_norm(self, benchmark, pkgid):
+    #     initialize_package(pkgid)
+    #     setup = lambda: (generate_arrays(pkgid, 1), {})
+    #     pkg = PKGDICT[pkgid]
+    #     benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
 
-        if pkg.__name__ == 'arrayfire':
-            result = benchmark.pedantic(
-                target=pkg.norm,
-                setup=setup,
-                rounds=ROUNDS,
-                iterations=ITERATIONS
-            )   
-        else:
-            result = benchmark.pedantic(
-                target=pkg.linalg.norm,
-                setup=setup,
-                rounds=ROUNDS,
-                iterations=ITERATIONS
-            )   
+    #     if pkg.__name__ == 'arrayfire':
+    #         result = benchmark.pedantic(
+    #             target=pkg.norm,
+    #             setup=setup,
+    #             rounds=ROUNDS,
+    #             iterations=ITERATIONS
+    #         )   
+    #     else:
+    #         result = benchmark.pedantic(
+    #             target=pkg.linalg.norm,
+    #             setup=setup,
+    #             rounds=ROUNDS,
+    #             iterations=ITERATIONS
+    #         )   

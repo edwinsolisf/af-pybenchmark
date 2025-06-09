@@ -81,7 +81,7 @@ def gemm_np(A, B, C):
     return alpha * np.matmul(A, B) + beta * C
 
 def gemm_af(A, B, C):
-    return C + af.gemm(A, B, alpha=alpha, beta=beta)
+    return af.gemm(A, B, alpha=alpha, beta=beta, accum=C)
 
 def gemm_dpnp(A, B, C):
     return alpha * dpnp.matmul(A, B) + beta * C

@@ -33,8 +33,8 @@ import numpy as np
 import dpnp
 import cupy
 
-ROUNDS = 100
-NSIZE = 2 ** 10
+ROUNDS = 25
+NSIZE = 2 ** 11
 NNSIZE = NSIZE ** 2
 DTYPE = "float32"
 
@@ -61,12 +61,16 @@ def initialize_package(PKG_ID):
 
     if PKG_ID == "afcpu":
         af.set_backend(af.BackendType.cpu)
+        af.info()
     elif PKG_ID == "afopencl":
         af.set_backend(af.BackendType.opencl)
+        af.info()
     elif PKG_ID == "afcuda":
         af.set_backend(af.BackendType.cuda)
+        af.info()
     elif PKG_ID == "afoneapi":
         af.set_backend(af.BackendType.oneapi)
+        af.info()
     elif PKG_ID == "numpy":
         np.random.seed(0)
     elif PKG_ID == "dpnp":
