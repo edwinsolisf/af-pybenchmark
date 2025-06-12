@@ -34,12 +34,34 @@ ITERATIONS = 1
 )
 class TestElementwise:
     def test_group_elementwise(self, benchmark, pkgid):
+        initialize_package(pkgid)
+
         setup = lambda: ([generate_arrays(pkgid, 1)[0] / (NSIZE * NSIZE)], {})
         pkg = PKGDICT[pkgid]
 
         def func(arr):
             return pkg.exp(pkg.cos(pkg.sinh(arr))) +\
                 pkg.cbrt(pkg.log(arr) * pkg.expm1(-pkg.sqrt(arr)))
+        
+        def func_af(arr):
+            x = pkg.exp(pkg.cos(pkg.sinh(arr))) +\
+                pkg.cbrt(pkg.log(arr) * pkg.expm1(-pkg.sqrt(arr)))
+            af.eval(x)
+            af.sync()
+            return x
+
+        def func_cupy(arr):
+            x = pkg.exp(pkg.cos(pkg.sinh(arr))) +\
+                pkg.cbrt(pkg.log(arr) * pkg.expm1(-pkg.sqrt(arr)))
+            cupy.cuda.runtime.deviceSynchronize()
+            return x
+
+        GROUP_FUNCS = {
+            "numpy": func,
+            "cupy": func_cupy,
+            "arrayfire": func_af,
+            "dpnp": func
+        }
 
         benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
         result = benchmark.pedantic(

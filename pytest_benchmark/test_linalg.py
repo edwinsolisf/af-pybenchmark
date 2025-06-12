@@ -88,7 +88,24 @@ class Eindot:
             iterations=ITERATIONS,
         )
 
-        
+def svd_np(arr):
+    return np.linalg.svd(arr)
+
+def svd_dpnp(arr):
+    return dpnp.linalg.svd(arr)
+
+def svd_af(arr):
+    x = af.svd(arr)
+    af.eval(x)
+    af.sync()
+    return x
+
+def svd_cupy(arr):
+    x = cupy.linalg.svd(arr)
+    cupy.cuda.runtime.deviceSynchronize()
+    return x
+
+
 @pytest.mark.parametrize(
     "pkgid", IDS, ids=IDS
 )
@@ -128,6 +145,7 @@ class TestLinalg:
     def test_svd(self, benchmark, pkgid):
         initialize_package(pkgid)
         setup = lambda: (generate_arrays(pkgid, 1), {})
+
         benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
         pkg = PKGDICT[pkgid]
         if pkg.__name__ == 'arrayfire':
@@ -137,6 +155,12 @@ class TestLinalg:
                 rounds=ROUNDS,
                 iterations=ITERATIONS
             )
+            SVD_FUNCS = {
+                "numpy": svd_np,
+                "cupy": svd_cupy,
+                "arrayfire": svd_af,
+                "dpnp": svd_dpnp
+            }
         else:
             result = benchmark.pedantic(
                 target=pkg.linalg.svd,

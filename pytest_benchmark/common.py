@@ -31,7 +31,9 @@ import math
 import arrayfire as af
 import numpy as np
 import dpnp
+import dpctl
 import cupy
+import gc
 
 ROUNDS = 25
 NSIZE = 2 ** 11
@@ -58,27 +60,35 @@ for key, value in PKGDICT.items():
 def initialize_package(PKG_ID):
     pkg = PKGDICT[PKG_ID]
 
-
+    
     if PKG_ID == "afcpu":
         af.set_backend(af.BackendType.cpu)
+        af.device_gc()
         af.info()
     elif PKG_ID == "afopencl":
         af.set_backend(af.BackendType.opencl)
+        af.device_gc()
         af.info()
     elif PKG_ID == "afcuda":
         af.set_backend(af.BackendType.cuda)
+        af.device_gc()
         af.info()
     elif PKG_ID == "afoneapi":
         af.set_backend(af.BackendType.oneapi)
+        af.device_gc()
         af.info()
     elif PKG_ID == "numpy":
         np.random.seed(0)
     elif PKG_ID == "dpnp":
         dpnp.random.seed(0)
+        print(dpctl.get_devices()[0])
     elif PKG_ID == "cupy":
         cupy.random.seed(0)
+        print(cupy.cuda.Device())
+        mempool = cupy.get_default_memory_pool()
+        mempool.free_all_blocks()
     else:
         raise NotImplementedError()
 
-    if "af" in PKG_ID:
-        pass
+    # Free all unused memory
+    gc.collect()

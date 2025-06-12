@@ -41,6 +41,8 @@ kern = create_cupy_kernel(config)
 class TestGemm:
     def test_gemm(self, benchmark, pkgid):
         pkg = PKGDICT[pkgid]
+        initialize_package(pkgid)
+
         setup = lambda: (generate_arrays(pkgid, 3), {})
 
         benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix" 
@@ -54,8 +56,6 @@ class TestGemm:
 def generate_arrays(pkgid, count):
     arr_list = []
     pkg = PKGDICT[pkgid].__name__
-    
-    initialize_package(pkgid)
 
     if "cupy" == pkg:
         cupy.random.seed(1)
@@ -81,7 +81,10 @@ def gemm_np(A, B, C):
     return alpha * np.matmul(A, B) + beta * C
 
 def gemm_af(A, B, C):
-    return af.gemm(A, B, alpha=alpha, beta=beta, accum=C)
+    x = af.gemm(A, B, alpha=alpha, beta=beta, accum=C)
+    af.eval(x)
+    af.sync()
+    return x
 
 def gemm_dpnp(A, B, C):
     return alpha * dpnp.matmul(A, B) + beta * C
@@ -100,6 +103,7 @@ def gemm_cupy(A, B, C):
     args = (m, n, k, A, B, C)
     shared_mem = blk_k * (blk_m + 1) * 4 + blk_n * (blk_k + 1) * 4
     kern(grid, block, args=args, shared_mem=shared_mem)
+    cupy.cuda.runtime.deviceSynchronize()
     return C
 
 FUNCS = {
