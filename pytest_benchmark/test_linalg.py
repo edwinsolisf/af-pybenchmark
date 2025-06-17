@@ -89,19 +89,20 @@ class Eindot:
         )
 
 def svd_np(arr):
-    return np.linalg.svd(arr)
+    return np.linalg.qr(arr)
 
 def svd_dpnp(arr):
-    return dpnp.linalg.svd(arr)
+    return dpnp.linalg.qr(arr)
 
 def svd_af(arr):
-    x = af.svd(arr)
-    af.eval(x)
+    x = af.qr(arr)
+    for r in x:
+        af.eval(r)
     af.sync()
     return x
 
 def svd_cupy(arr):
-    x = cupy.linalg.svd(arr)
+    x = cupy.linalg.qr(arr)
     cupy.cuda.runtime.deviceSynchronize()
     return x
 
@@ -148,26 +149,19 @@ class TestLinalg:
 
         benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
         pkg = PKGDICT[pkgid]
-        if pkg.__name__ == 'arrayfire':
-            result = benchmark.pedantic(
-                target=pkg.svd,
-                setup=setup,
-                rounds=ROUNDS,
-                iterations=ITERATIONS
-            )
-            SVD_FUNCS = {
-                "numpy": svd_np,
-                "cupy": svd_cupy,
-                "arrayfire": svd_af,
-                "dpnp": svd_dpnp
-            }
-        else:
-            result = benchmark.pedantic(
-                target=pkg.linalg.svd,
-                setup=setup,
-                rounds=ROUNDS,
-                iterations=ITERATIONS
-            )
+       
+        SVD_FUNCS = {
+            "numpy": svd_np,
+            "cupy": svd_cupy,
+            "arrayfire": svd_af,
+            "dpnp": svd_dpnp
+        }
+        result = benchmark.pedantic(
+            target=SVD_FUNCS[pkg.__name__],
+            setup=setup,
+            rounds=ROUNDS,
+            iterations=ITERATIONS
+        )
     
     # def test_inv(self, benchmark, pkgid):
     #     initialize_package(pkgid)

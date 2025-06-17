@@ -35,8 +35,8 @@ import dpctl
 import cupy
 import gc
 
-ROUNDS = 25
-NSIZE = 2 ** 11
+ROUNDS = 30
+NSIZE = 2 ** 13
 NNSIZE = NSIZE ** 2
 DTYPE = "float32"
 
@@ -60,6 +60,12 @@ for key, value in PKGDICT.items():
 def initialize_package(PKG_ID):
     pkg = PKGDICT[PKG_ID]
 
+    try:
+        af.device_gc()
+        mempool = cupy.get_default_memory_pool()
+        mempool.free_all_blocks()
+    except:
+        pass
     
     if PKG_ID == "afcpu":
         af.set_backend(af.BackendType.cpu)

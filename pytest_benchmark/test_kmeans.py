@@ -3,7 +3,7 @@ from common import *
 ITERATIONS = 10
 TOLERANCE = 1e-4
 NSAMPLES = NSIZE * int(np.sqrt(NSIZE))
-NFEATURES = int(np.sqrt(NSIZE))
+NFEATURES = 256
 K = 20
 
 @pytest.mark.parametrize(
