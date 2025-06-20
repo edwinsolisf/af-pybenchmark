@@ -44,8 +44,8 @@ class TestElementwise:
                 pkg.cbrt(pkg.log(arr) * pkg.expm1(-pkg.sqrt(arr)))
         
         def func_af(arr):
-            x = pkg.exp(pkg.cos(pkg.sinh(arr))) +\
-                pkg.cbrt(pkg.log(arr) * pkg.expm1(-pkg.sqrt(arr)))
+            x = af.exp(af.cos(af.sinh(arr))) +\
+                af.cbrt(af.log(arr) * af.expm1(-af.sqrt(arr)))
             af.eval(x)
             af.sync()
             return x
@@ -65,7 +65,7 @@ class TestElementwise:
 
         benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
         result = benchmark.pedantic(
-            target=func,
+            target=GROUP_FUNCS[pkg.__name__],
             setup=setup,
             rounds=ROUNDS,
             iterations=ITERATIONS

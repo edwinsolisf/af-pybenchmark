@@ -18,7 +18,7 @@ ROUND_NUMBERS = 1
 PKG_NAMES = [
     'numpy',
     'dpnp',
-    # 'cupy'
+    'cupy'
 ] 
 
 # color used in graphs
