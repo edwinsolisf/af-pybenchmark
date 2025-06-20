@@ -305,19 +305,18 @@ class TestElementwise:
 
 def generate_arrays(pkgid, count):
     arr_list = []
-
-    initialize_package(pkgid)
     pkg = PKGDICT[pkgid]
     pkg = pkg.__name__
-
     if "cupy" == pkg:
         for i in range(count):
             arr_list.append(cupy.random.rand(NSIZE, NSIZE, dtype=DTYPE))
         cupy.cuda.runtime.deviceSynchronize()
     elif "arrayfire" == pkg:
-        af.device_gc()
         for i in range(count):  
-            arr_list.append(af.randu((NSIZE, NSIZE), dtype=getattr(af, DTYPE)))
+            x = af.randu((NSIZE, NSIZE), dtype=getattr(af, DTYPE))
+            af.eval(x)
+            arr_list.append(x)
+        af.sync()
     elif "dpnp" == pkg:
         for i in range(count):
             arr_list.append(dpnp.random.rand(NSIZE, NSIZE).astype(DTYPE))

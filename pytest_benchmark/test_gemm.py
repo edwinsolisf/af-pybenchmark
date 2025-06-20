@@ -55,17 +55,19 @@ class TestGemm:
 
 def generate_arrays(pkgid, count):
     arr_list = []
-    pkg = PKGDICT[pkgid].__name__
-
+    pkg = PKGDICT[pkgid]
+    pkg = pkg.__name__
     if "cupy" == pkg:
         cupy.random.seed(1)
         for i in range(count):
-            arr_list.append(cupy.asfortranarray(cupy.random.rand(NSIZE, NSIZE, dtype=DTYPE)))
+            arr_list.append(cupy.random.rand(NSIZE, NSIZE, dtype=DTYPE))
         cupy.cuda.runtime.deviceSynchronize()
     elif "arrayfire" == pkg:
-        af.device_gc()
         for i in range(count):  
-            arr_list.append(af.randu((NSIZE, NSIZE), dtype=getattr(af, DTYPE)))
+            x = af.randu((NSIZE, NSIZE), dtype=getattr(af, DTYPE))
+            af.eval(x)
+            arr_list.append(x)
+        af.sync()
     elif "dpnp" == pkg:
         dpnp.random.seed(1)
         for i in range(count):
@@ -75,7 +77,7 @@ def generate_arrays(pkgid, count):
         for i in range(count):
             arr_list.append(np.random.rand(NSIZE, NSIZE).astype(DTYPE))
 
-    return tuple(arr_list)
+    return arr_list
 
 def gemm_np(A, B, C):
     return alpha * np.matmul(A, B) + beta * C

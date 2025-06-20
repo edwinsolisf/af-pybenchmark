@@ -5,4 +5,6 @@ cupy-cuda12x
 pytest
 pytest-benchmark
 matplotlib
+gdown
+pandas
 # arrayfire

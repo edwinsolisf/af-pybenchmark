@@ -35,11 +35,13 @@ import dpctl
 import cupy
 import gc
 
+# modify parameters for most benchmarks
 ROUNDS = 30
 NSIZE = 2 ** 13
 NNSIZE = NSIZE ** 2
 DTYPE = "float32"
 
+# comment a line to remove that package from testing
 PKGDICT = {
     "dpnp" : dpnp,
     "numpy" : np,
@@ -57,6 +59,7 @@ for key, value in PKGDICT.items():
     IDS.append(key)
     PKGS.append(value)
 
+# Initialize packages and cleanup memory before each round
 def initialize_package(PKG_ID):
     pkg = PKGDICT[PKG_ID]
 

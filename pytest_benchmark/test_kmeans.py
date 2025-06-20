@@ -2,7 +2,7 @@ from common import *
 
 ITERATIONS = 10
 TOLERANCE = 1e-4
-NSAMPLES = NSIZE * int(np.sqrt(NSIZE))
+NSAMPLES = NSIZE
 NFEATURES = 256
 K = 20
 

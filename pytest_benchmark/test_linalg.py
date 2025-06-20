@@ -29,119 +29,172 @@ from common import *
 
 ITERATIONS = 1
 
-def generate_arrays(pkgid, count):
+eps = 1e-3
+
+def generate_arrays(pkgid, count, posdef = False):
     arr_list = []
     pkg = PKGDICT[pkgid]
     pkg = pkg.__name__
     if "cupy" == pkg:
-        cupy.random.seed(1)
         for i in range(count):
-            arr_list.append(cupy.random.rand(NSIZE, NSIZE, dtype=DTYPE))
+            x = cupy.random.rand(NSIZE, NSIZE, dtype=DTYPE)
+            if posdef:
+                x = x @ x.T + x.T @ x + eps
+            arr_list.append(x)
         cupy.cuda.runtime.deviceSynchronize()
     elif "arrayfire" == pkg:
-        af.device_gc()
         for i in range(count):  
-            arr_list.append(af.randu((NSIZE, NSIZE), dtype=getattr(af, DTYPE)))
+            x = af.randu((NSIZE, NSIZE), dtype=getattr(af, DTYPE))
+            if posdef:
+                x = af.matmul(x, x.T) + af.matmul(x.T, x) + eps
+            af.eval(x)
+            arr_list.append(x)
+        af.sync()
     elif "dpnp" == pkg:
-        dpnp.random.seed(1)
         for i in range(count):
-            arr_list.append(dpnp.random.rand(NSIZE, NSIZE).astype(DTYPE))
+            x = dpnp.random.rand(NSIZE, NSIZE).astype(DTYPE)
+            if posdef:
+                x = x @ x.T + x.T @ x + eps
+            arr_list.append(x)
     elif "numpy" == pkg:
-        np.random.rand(1)
         for i in range(count):
-            arr_list.append(np.random.rand(NSIZE, NSIZE).astype(DTYPE))
+            x = np.random.rand(NSIZE, NSIZE).astype(DTYPE)
+            if posdef:
+                x = x @ x.T + x.T @ x + eps
+            arr_list.append(x)
 
     return arr_list
 
-@pytest.mark.parametrize(
-    "pkgid", IDS, ids=IDS
-)
-class Eindot:
-    def test_dot_a_b(self, benchmark, pkgid):
-        setup = lambda: (generate_arrays(pkgid, 2), {})
-        pkg = PKGDICT[pkgid]
-        result = benchmark.pedantic(
-            target=pkg.dot,
-            setup=setup,
-            rounds=ROUNDS,
-            iterations=ITERATIONS,
-        )
-
-    def test_matmul_a_b(self, benchmark, pkgid):
-        setup = lambda: (generate_arrays(pkgid, 2), {})
-        pkg = PKGDICT[pkgid]
-        result = benchmark.pedantic(
-            target=pkg.matmul,
-            setup=setup,
-            rounds=ROUNDS,
-            iterations=ITERATIONS,
-        )
-
-    def test_matmul_a_bt(self, benchmark, pkgid):
-        a, b = generate_arrays(pkgid, 2)
-        setup = lambda: ([a, b.T], {})
-        pkg = PKGDICT[pkgid]
-        result = benchmark.pedantic(
-            target=pkg.matmul,
-            setup=setup,
-            rounds=ROUNDS,
-            iterations=ITERATIONS,
-        )
-
 def svd_np(arr):
-    return np.linalg.qr(arr)
+    return np.linalg.svd(arr)
 
 def svd_dpnp(arr):
-    return dpnp.linalg.qr(arr)
+    return dpnp.linalg.svd(arr)
 
 def svd_af(arr):
-    x = af.qr(arr)
+    x = af.svd(arr)
     for r in x:
         af.eval(r)
     af.sync()
     return x
 
 def svd_cupy(arr):
+    x = cupy.linalg.svd(arr)
+    cupy.cuda.runtime.deviceSynchronize()
+    return x
+
+def qr_np(arr):
+    return np.linalg.qr(arr)
+
+def qr_dpnp(arr):
+    return dpnp.linalg.qr(arr)
+
+def qr_af(arr):
+    x = af.qr(arr)
+    for r in x:
+        af.eval(r)
+    af.sync()
+    return x
+
+def qr_cupy(arr):
     x = cupy.linalg.qr(arr)
     cupy.cuda.runtime.deviceSynchronize()
     return x
 
+def cholesky_np(arr):
+    return np.linalg.cholesky(arr)
+
+def cholesky_dpnp(arr):
+    return dpnp.linalg.cholesky(arr)
+
+def cholesky_af(arr):
+    x, info = af.cholesky(arr)
+    af.eval(x)
+    af.sync()
+    return x
+
+def cholesky_cupy(arr):
+    x = cupy.linalg.cholesky(arr)
+    cupy.cuda.runtime.deviceSynchronize()
+    return x
+
+def qr_cupy(arr):
+    x = cupy.linalg.qr(arr)
+    cupy.cuda.runtime.deviceSynchronize()
+    return x
+
+def inv_np(arr):
+    return np.linalg.inv(arr)
+
+def inv_dpnp(arr):
+    return dpnp.linalg.inv(arr)
+
+def inv_af(arr):
+    x, info = af.inverse(arr)
+    af.eval(x)
+    af.sync()
+    return x
+
+def inv_cupy(arr):
+    x = cupy.linalg.inv(arr)
+    cupy.cuda.runtime.deviceSynchronize()
+    return x
+
+def det_np(arr):
+    return np.linalg.det(arr)
+
+def det_dpnp(arr):
+    return dpnp.linalg.det(arr)
+
+def det_af(arr):
+    x = af.det(arr)
+    af.sync()
+    return x
+
+def det_cupy(arr):
+    x = cupy.linalg.det(arr)
+    cupy.cuda.runtime.deviceSynchronize()
+    return x
+
+def norm_np(arr):
+    return np.linalg.norm(arr)
+
+def norm_dpnp(arr):
+    return dpnp.linalg.norm(arr)
+
+def norm_af(arr):
+    x = af.norm(arr)
+    af.sync()
+    return x
+
+def norm_cupy(arr):
+    x = cupy.linalg.norm(arr)
+    cupy.cuda.runtime.deviceSynchronize()
+    return x
 
 @pytest.mark.parametrize(
     "pkgid", IDS, ids=IDS
 )
 class TestLinalg:
-    # def test_lstsq(self, benchmark, pkg):
-    #     a, b = generate_arrays(pkg)
-    #     setup = lambda: (generate_arrays(pkg), {"rcond":-1})
+    def test_cholesky(self, benchmark, pkgid):
+        initialize_package(pkgid)
+        setup = lambda: (generate_arrays(pkgid, 1, True), {})
 
-    #     result = benchmark.pedantic(
-    #         target=pkg.lstsq,
-    #         setup=setup,
-    #         rounds=ROUNDS,
-    #         iterations=ITERATIONS,
-    #     )
-    # def test_cholesky(self, benchmark, pkgid):
-    #     initialize_package(pkgid)
-    #     arr = generate_arrays(pkgid, 1)[0]
-    #     pkg = PKGDICT[pkgid]
-    #     setup = lambda: ([pkg.matmul(arr.T, arr) + pkg.matmul(arr.T, arr).T], {})
-
-    #     benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
-    #     if pkg.__name__ == 'arrayfire':
-    #         result = benchmark.pedantic(
-    #             target=pkg.cholesky,
-    #             setup=setup,
-    #             rounds=ROUNDS,
-    #             iterations=ITERATIONS
-    #         )
-    #     else:
-    #         result = benchmark.pedantic(
-    #             target=pkg.linalg.cholesky,
-    #             setup=setup,
-    #             rounds=ROUNDS,
-    #             iterations=ITERATIONS
-    #         )
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
+        pkg = PKGDICT[pkgid]
+       
+        CHOLESKY_FUNCS = {
+            "numpy": cholesky_np,
+            "cupy": cholesky_cupy,
+            "arrayfire": cholesky_af,
+            "dpnp": cholesky_dpnp
+        }
+        result = benchmark.pedantic(
+            target=CHOLESKY_FUNCS[pkg.__name__],
+            setup=setup,
+            rounds=ROUNDS,
+            iterations=ITERATIONS
+        )
 
     def test_svd(self, benchmark, pkgid):
         initialize_package(pkgid)
@@ -162,89 +215,83 @@ class TestLinalg:
             rounds=ROUNDS,
             iterations=ITERATIONS
         )
+
+    def test_qr(self, benchmark, pkgid):
+        initialize_package(pkgid)
+        setup = lambda: (generate_arrays(pkgid, 1), {})
+
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
+        pkg = PKGDICT[pkgid]
+       
+        QR_FUNCS = {
+            "numpy": qr_np,
+            "cupy": qr_cupy,
+            "arrayfire": qr_af,
+            "dpnp": qr_dpnp
+        }
+        result = benchmark.pedantic(
+            target=QR_FUNCS[pkg.__name__],
+            setup=setup,
+            rounds=ROUNDS,
+            iterations=ITERATIONS
+        )
     
-    # def test_inv(self, benchmark, pkgid):
-    #     initialize_package(pkgid)
-    #     arr = generate_arrays(pkgid, 1)[0]
-    #     pkg = PKGDICT[pkgid]
-    #     setup = lambda: ([pkg.matmul(arr,arr)], {})
+    def test_inv(self, benchmark, pkgid):
+        initialize_package(pkgid)
+        setup = lambda: (generate_arrays(pkgid, 1), {})
 
-    #     benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
-    #     if pkg.__name__ == 'arrayfire':
-    #         result = benchmark.pedantic(
-    #             target=pkg.inverse,
-    #             setup=setup,
-    #             rounds=ROUNDS,
-    #             iterations=ITERATIONS
-    #         )
-    #     else:
-    #         result = benchmark.pedantic(
-    #             target=pkg.linalg.inv,
-    #             setup=setup,
-    #             rounds=ROUNDS,
-    #             iterations=ITERATIONS
-    #         )
-
-    # def test_pinv(self, benchmark, pkgid):
-    #     initialize_package(pkgid)
-    #     setup = lambda: (generate_arrays(pkgid, 1), {})
-
-    #     pkg = PKGDICT[pkgid]
-    #     benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
-    #     if pkg.__name__ == 'arrayfire':
-    #         result = benchmark.pedantic(
-    #             target=pkg.pinverse,
-    #             setup=setup,
-    #             rounds=ROUNDS,
-    #             iterations=ITERATIONS
-    #         ) 
-    #     else:
-    #         result = benchmark.pedantic(
-    #             target=pkg.linalg.pinv,
-    #             setup=setup,
-    #             rounds=ROUNDS,
-    #             iterations=ITERATIONS
-    #         )
-
-    # def test_det(self, benchmark, pkgid):
-    #     initialize_package(pkgid)
-    #     arr = generate_arrays(pkgid, 1)[0]
-    #     pkg = PKGDICT[pkgid]
-    #     setup = lambda: ([pkg.matmul(arr, arr.T)], {})
-    #     benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
-
-    #     if pkg.__name__ == 'arrayfire':
-    #         result = benchmark.pedantic(
-    #             target=pkg.det,
-    #             setup=setup,
-    #             rounds=ROUNDS,
-    #             iterations=ITERATIONS
-    #         )
-    #     else:
-    #         result = benchmark.pedantic(
-    #             target=pkg.linalg.det,
-    #             setup=setup,
-    #             rounds=ROUNDS,
-    #             iterations=ITERATIONS
-    #         )
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
+        pkg = PKGDICT[pkgid]
+       
+        INV_FUNCS = {
+            "numpy": inv_np,
+            "cupy": inv_cupy,
+            "arrayfire": inv_af,
+            "dpnp": inv_dpnp
+        }
+        result = benchmark.pedantic(
+            target=INV_FUNCS[pkg.__name__],
+            setup=setup,
+            rounds=ROUNDS,
+            iterations=ITERATIONS
+        )
     
-    # def test_norm(self, benchmark, pkgid):
-    #     initialize_package(pkgid)
-    #     setup = lambda: (generate_arrays(pkgid, 1), {})
-    #     pkg = PKGDICT[pkgid]
-    #     benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
+    def test_det(self, benchmark, pkgid):
+        initialize_package(pkgid)
+        setup = lambda: (generate_arrays(pkgid, 1), {})
 
-    #     if pkg.__name__ == 'arrayfire':
-    #         result = benchmark.pedantic(
-    #             target=pkg.norm,
-    #             setup=setup,
-    #             rounds=ROUNDS,
-    #             iterations=ITERATIONS
-    #         )   
-    #     else:
-    #         result = benchmark.pedantic(
-    #             target=pkg.linalg.norm,
-    #             setup=setup,
-    #             rounds=ROUNDS,
-    #             iterations=ITERATIONS
-    #         )   
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
+        pkg = PKGDICT[pkgid]
+       
+        DET_FUNCS = {
+            "numpy": det_np,
+            "cupy": det_cupy,
+            "arrayfire": det_af,
+            "dpnp": det_dpnp
+        }
+        result = benchmark.pedantic(
+            target=DET_FUNCS[pkg.__name__],
+            setup=setup,
+            rounds=ROUNDS,
+            iterations=ITERATIONS
+        )
+    
+    def test_norm(self, benchmark, pkgid):
+        initialize_package(pkgid)
+        setup = lambda: (generate_arrays(pkgid, 1), {})
+
+        benchmark.extra_info["description"] = f"{NSIZE}x{NSIZE} Matrix"
+        pkg = PKGDICT[pkgid]
+       
+        NORM_FUNCS = {
+            "numpy": norm_np,
+            "cupy": norm_cupy,
+            "arrayfire": norm_af,
+            "dpnp": norm_dpnp
+        }
+        result = benchmark.pedantic(
+            target=NORM_FUNCS[pkg.__name__],
+            setup=setup,
+            rounds=ROUNDS,
+            iterations=ITERATIONS
+        )

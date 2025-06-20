@@ -31,25 +31,22 @@ ITERATIONS = 1
 
 def generate_arrays(pkgid, count):
     arr_list = []
-    initialize_package(pkgid)
     pkg = PKGDICT[pkgid]
     pkg = pkg.__name__
-    
     if "cupy" == pkg:
-        cupy.random.seed(1)
         for i in range(count):
             arr_list.append(cupy.random.rand(NSIZE, NSIZE, dtype=DTYPE))
         cupy.cuda.runtime.deviceSynchronize()
     elif "arrayfire" == pkg:
-        af.device_gc()
         for i in range(count):  
-            arr_list.append(af.randu((NSIZE, NSIZE), dtype=getattr(af, DTYPE)))
+            x = af.randu((NSIZE, NSIZE), dtype=getattr(af, DTYPE))
+            af.eval(x)
+            arr_list.append(x)
+        af.sync()
     elif "dpnp" == pkg:
-        dpnp.random.seed(1)
         for i in range(count):
             arr_list.append(dpnp.random.rand(NSIZE, NSIZE).astype(DTYPE))
     elif "numpy" == pkg:
-        np.random.rand(1)
         for i in range(count):
             arr_list.append(np.random.rand(NSIZE, NSIZE).astype(DTYPE))
 
@@ -60,6 +57,7 @@ def generate_arrays(pkgid, count):
 )
 class TestFFT:
     def test_fft(self, benchmark, pkgid):
+        initialize_package(pkgid)
         setup = lambda: (generate_arrays(pkgid, 1), {})
         pkg = PKGDICT[pkgid]
 
