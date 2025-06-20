@@ -38,3 +38,6 @@ To modify the hardware display, modify `HARDWARE`
 
 Example:
 <img src="img/comparison_afcuda.png"></img>
+<img src="img/comparison_afopencl_cuda.png"></img>
+<img src="img/comparison_afopencl.png"></img>
+<img src="img/comparison_afoneapi.png"></img>
